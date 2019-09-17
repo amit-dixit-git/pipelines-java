@@ -1,4 +1,4 @@
-
+[![Build Status](https://dev.azure.com/amitdixit2309/devops-demo/_apis/build/status/amit-dixit-git.pipelines-java?branchName=master)](https://dev.azure.com/amitdixit2309/devops-demo/_build/latest?definitionId=1&branchName=master)
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
