@@ -20,6 +20,11 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+  
+- bash: |
+   ls $(build.artifactstagingdirectory)/
+   ls $(sysytem.defaultworkingdirectory)/
+  displayName: 'Bash Script for checking directories'
 - task: CopyFiles@2
   displayName: 'Copy yaml that will deploying to AKS'
   inputs:
