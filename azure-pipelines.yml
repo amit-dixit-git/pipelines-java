@@ -20,3 +20,67 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+- task: CopyFiles@2
+  displayName: 'Copy yaml that will deploying to AKS'
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: |
+     deployment.yaml
+     
+    TargetFolder: '$(build.artifactstagingdirectory)'
+    CleanTargetFolder: true
+  condition: succeededOrFailed()
+
+- bash: |
+   #!/bin/bash
+   
+   # WARNING! This script deletes data!
+   # Run only if you do not have systems
+   # that pull images via manifest digest.
+   
+   # Change to 'true' to enable image delete
+   ENABLE_DELETE=true
+   
+   # Modify for your environment
+   # TIMESTAMP can be a date-time string such as 2019-03-15T17:55:00.
+   REGISTRY=mydemoazureacr
+   REPOSITORY=devops-demo-java-app
+   TIMESTAMP=2019-10-01T16:00:00  
+   #login to acr
+   az acr login -n mydemoazureacr -u mydemoazureacr -p MC3Wk13UtMao=iYJH40Cg6UPuTwf1Cct
+   # Delete all images older than specified timestamp.
+   
+   if [ "$ENABLE_DELETE" = true ]
+   then
+       az acr repository show-manifests --name $REGISTRY --repository $REPOSITORY \
+       --orderby time_asc --query "[?timestamp < '$TIMESTAMP'].digest" -o tsv \
+       | xargs -I% az acr repository delete --name $REGISTRY --image $REPOSITORY@% --yes
+   else
+       echo "No data deleted."
+       echo "Set ENABLE_DELETE=true to enable deletion of these images in $REPOSITORY:"
+       az acr repository show-manifests --name $REGISTRY --repository $REPOSITORY \
+      --orderby time_asc --query "[?timestamp < '$TIMESTAMP'].[digest, timestamp]" -o tsv
+   fi
+  displayName: 'Bash Script'
+
+- task: Docker@1
+  displayName: build
+  inputs:
+    azureSubscriptionEndpoint: 'Free Trial (d9583d0e-53ba-40c9-8eb6-df7fed5cc2f1)'
+    azureContainerRegistry: mydemoazureacr.azurecr.io
+    dockerFile: Dockerfile
+    imageName: '$(Build.Repository.Name)-java-app-demo:$(Build.BuildId)'
+
+- task: Docker@1
+  displayName: 'Push an image'
+  inputs:
+    azureSubscriptionEndpoint: 'Free Trial (d9583d0e-53ba-40c9-8eb6-df7fed5cc2f1)'
+    azureContainerRegistry: mydemoazureacr.azurecr.io
+    command: 'Push an image'
+    imageName: '$(Build.Repository.Name)-java-app-demo:$(Build.BuildId)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact: drop'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
