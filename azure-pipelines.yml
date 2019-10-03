@@ -22,7 +22,7 @@ steps:
     goals: 'package'
   
 - bash: |
-   ls /home/vsts/work/1/s
+   ls /home/vsts/work/1/s/target/
    find Dockerfile
   displayName: 'Bash Script for checking directories'
 
