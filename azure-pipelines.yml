@@ -24,13 +24,15 @@ steps:
 - bash: |
    ls $(build.artifactstagingdirectory)/
    ls $(sysytem.defaultworkingdirectory)/
+   ls /home/vsts/work/1/s
+
   displayName: 'Bash Script for checking directories'
 - task: CopyFiles@2
   displayName: 'Copy yaml that will deploying to AKS'
   inputs:
     SourceFolder: '$(system.defaultworkingdirectory)'
     Contents: |
-     deployment.yaml
+     **/deployment.yaml
      
     TargetFolder: '$(build.artifactstagingdirectory)'
     CleanTargetFolder: true
@@ -73,7 +75,7 @@ steps:
   inputs:
     azureSubscriptionEndpoint: 'Free Trial (d9583d0e-53ba-40c9-8eb6-df7fed5cc2f1)'
     azureContainerRegistry: mydemoazureacr.azurecr.io
-    dockerFile: Dockerfile
+    dockerFile: '**/Dockerfile'
     imageName: '$(Build.Repository.Name)-java-app-demo:$(Build.BuildId)'
 
 - task: Docker@1
