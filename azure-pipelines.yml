@@ -22,8 +22,17 @@ steps:
     goals: 'package'
   
 - bash: |
+   #TargetFolder
    ls /home/vsts/work/1/s/target/
-   find Dockerfile
+   #home
+   ls /home/vsts/work/1/s/
+   #next
+   ls /home/vsts/work/1/
+   #NEXT
+   ls /home/vsts/work/
+   #currentDir
+   pwd
+
   displayName: 'Bash Script for checking directories'
 
 - task: CopyFiles@2
@@ -31,8 +40,7 @@ steps:
   inputs:
     SourceFolder: '$(system.defaultworkingdirectory)'
     Contents: |
-     **/deployment.yaml
-     
+     java-app.yaml
     TargetFolder: '$(build.artifactstagingdirectory)'
     CleanTargetFolder: true
   condition: succeededOrFailed()
@@ -90,3 +98,27 @@ steps:
   inputs:
     PathtoPublish: '$(build.artifactstagingdirectory)'
   condition: succeededOrFailed()
+
+
+- task: qetza.replacetokens.replacetokens-task.replacetokens@3
+  displayName: 'Replace tokens in java-app.yaml'
+  inputs:
+    rootDirectory: '$(System.DefaultWorkingDirectory)/_devops-demo-Maven-CI/test'
+    targetFiles: 'java-app.yaml'
+
+- task: Kubernetes@0
+  displayName: 'kubectl apply'
+  inputs:
+    kubernetesServiceConnection: kubernetesconfig
+    command: apply
+    useConfigurationFile: true
+    configuration: '$(System.DefaultWorkingDirectory)/_devops-demo-Maven-CI/test/java-app.yaml'
+    versionSpec: 1.13.2
+
+- task: Kubernetes@1
+  displayName: 'kubectl get'
+  inputs:
+    kubernetesServiceEndpoint: kubernetesconfig
+    command: get
+    arguments: all
+    outputFormat: yaml
